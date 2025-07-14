@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Malla Interactiva con Correlativas</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ccc; padding: 8px; }
+  th { background-color: #007acc; color: white; }
+  .aprobada { text-decoration: line-through; color: gray; }
+  .habilitada { background-color: #d4edda; }
+  .inhabilitada { color: #bbb; }
+</style>
+</head>
+<body>
+
+<h2>Malla Académica Interactiva</h2>
+<p>Marcar materias aprobadas para habilitar correlativas:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Aprobada</th>
+      <th>Código</th>
+      <th>Materia</th>
+      <th>Correlativas</th>
+    </tr>
+  </thead>
+  <tbody id="tablaMaterias">
+    <tr data-codigo="24201" data-correlativas="">
+      <td><input type="checkbox" class="checkMateria" /></td>
+      <td>24201</td>
+      <td>Taller de Lectura y Comprensión de Textos</td>
+      <td>-</td>
+    </tr>
+    <tr data-codigo="24202" data-correlativas="24201">
+      <td><input type="checkbox" class="checkMateria" disabled /></td>
+      <td>24202</td>
+      <td>Contabilidad Básica</td>
+      <td>24201</td>
+    </tr>
+    <tr data-codigo="24205" data-correlativas="24202">
+      <td><input type="checkbox" class="checkMateria" disabled /></td>
+      <td>24205</td>
+      <td>Contabilidad Intermedia</td>
+      <td>24202</td>
+    </tr>
+    <tr data-codigo="24210" data-correlativas="24205">
+      <td><input type="checkbox" class="checkMateria" disabled /></td>
+      <td>24210</td>
+      <td>Contabilidad de Costos</td>
+      <td>24205</td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  // Obtengo todas las filas y los inputs
+  const filas = document.querySelectorAll('#tablaMaterias tr');
+
+  // Función que actualiza el estado de habilitación de materias
+  function actualizarEstado() {
+    // 1) Armar un Set con códigos aprobados
+    const aprobadas = new Set();
+    filas.forEach(fila => {
+      const checkbox = fila.querySelector('input[type=checkbox]');
+      const codigo = fila.dataset.codigo;
+      if (checkbox.checked) aprobadas.add(codigo);
+    });
+
+    // 2) Para cada fila, revisar correlativas y habilitar o no
+    filas.forEach(fila => {
+      const correlativas = fila.dataset.correlativas.split(',').filter(x => x.trim() !== '');
+      const checkbox = fila.querySelector('input[type=checkbox]');
+      const codigo = fila.dataset.codigo;
+
+      // Si ya está aprobada, siempre habilitada
+      if (checkbox.checked) {
+        fila.classList.add('aprobada');
+        checkbox.disabled = false;
+        fila.classList.remove('inhabilitada', 'habilitada');
+        return;
+      }
+
+      // Si no tiene correlativas o todas están aprobadas, habilito
+      const todasCorrelativasAprobadas = correlativas.every(c => aprobadas.has(c));
+
+      if (todasCorrelativasAprobadas) {
+        checkbox.disabled = false;
+        fila.classList.add('habilitada');
+        fila.classList.remove('inhabilitada', 'aprobada');
+      } else {
+        checkbox.disabled = true;
+        fila.classList.add('inhabilitada');
+        fila.classList.remove('habilitada', 'aprobada');
+        checkbox.checked = false; // desmarco si estaba marcado
+      }
+    });
+  }
+
+  // Agrego evento a todos los checkbox para actualizar al click
+  filas.forEach(fila => {
+    const checkbox = fila.querySelector('input[type=checkbox]');
+    checkbox.addEventListener('change', actualizarEstado);
+  });
+
+  // Inicializo estado al cargar
+  actualizarEstado();
+</script>
+
+</body>
+</html>
